@@ -6,6 +6,12 @@ A RuneLite plugin for Old School RuneScape that tracks salvage loot from the Sai
 ![Java](https://img.shields.io/badge/Java-11-blue)
 ![License](https://img.shields.io/badge/License-BSD--2--Clause-green)
 
+<p align="center">
+  <img src="assets/salvaging.PNG" width="250" alt="Salvage Sack Panel" />
+  <img src="assets/with-unobtained.PNG" width="250" alt="Unobtained Items View" />
+  <img src="assets/tooltip.PNG" width="250" alt="Detailed Tooltip" />
+</p>
+
 ## Features
 
 ### 📊 Comprehensive Tracking
@@ -25,17 +31,19 @@ A RuneLite plugin for Old School RuneScape that tracks salvage loot from the Sai
 - **Luck Indicator**: Color-coded display showing if you're running lucky (green), neutral (yellow), or unlucky (red)
 
 ### 🎨 Visual Display
-- **Item Icons**: Displays actual item icons from the game
+- **Item Icons**: Displays actual item icons from the game (including untradeables like Boat bottles and Sailors' amulets)
 - **Quantity Tracking**: Shows total quantity received for stackable items
-- **Collapsible Sections**: Accordion-style panels for each shipwreck type
-- **Compact Design**: Sections collapse when empty, expand when they have data
+- **Collapsible Sections**: Accordion-style panels for all 8 shipwreck types (browse full drop tables even before sorting)
+- **Show Unobtained Drops**: Configurable option to display items you haven't received yet (dimmed out) to easily track dry streaks on rare uniques
+- **Fractional Odds ("1 in X")**: Display drop rates as standard OSRS odds (e.g., 1/750) or percentages
+- **Detailed Tooltips**: Hover over any item to view detailed stats: drop count, total quantity, total sorts, expected drops, luck ratio, and dry streak analysis
 - **Auto-Sorted Sections**: Most recently updated shipwreck always appears at the top
-- **Flexible Sorting**: Sort items by name, current rate, expected rate, or quantity with ascending/descending options
+- **Flexible Sorting**: Sort items by alphabetical name, current rate, expected rate, quantity, or luck with ascending/descending options
 
 ### 💾 Persistent Data
-- All tracking data is automatically saved between sessions
-- Sort preferences are saved and restored automatically
-- Data stored locally in `.runelite/salvagesack/`
+- All tracking data is automatically saved between sessions using RSProfile storage
+- Debounced saving minimizes disk/config overhead during rapid sorting
+- Sort preferences and expansion states persist across restarts
 
 ## Installation
 
@@ -119,10 +127,8 @@ The plugin includes expected drop rates sourced from the OSRS Wiki for all items
 - OSRS membership (Sailing skill access)
 
 ### Data Storage
-- **Location**: `~/.runelite/salvagesack/`
-- **Files**:
-  - `salvage-data.json` - Your tracking data
-  - `drop_rates.json` - Expected drop rate configuration
+- **Loot Data**: Automatically persisted in RuneLite's per-account RSProfile configuration. Legacy tracking data from `~/.runelite/salvagesack/salvage-data.json` is automatically migrated on first startup.
+- **Drop Rate Configuration**: `~/.runelite/salvagesack/drop_rates.json` stores customizable expected drop rates.
 
 ### Building from Source
 
@@ -143,11 +149,11 @@ cd SalvageSack
 **Q: Why isn't my loot being tracked?**
 A: Make sure you're sorting salvage (not just looting). The plugin detects the chat message "You sort through the [type] salvage and find..."
 
-**Q: Can I export my data?**
-A: Yes! Your data is stored in JSON format at `~/.runelite/salvagesack/salvage-data.json`
+**Q: Where is my data stored?**
+A: Tracking data is securely stored per-character in RuneLite's RSProfile configuration and synced across devices if you use RuneLite sync. Previous data in `~/.runelite/salvagesack/salvage-data.json` is migrated automatically.
 
 **Q: The drop rates seem wrong. Can I update them?**
-A: Yes, you can edit `drop_rates.json` in the salvagesack folder. The rates are sourced from the OSRS Wiki.
+A: Yes, you can edit `drop_rates.json` in `~/.runelite/salvagesack/`. The default rates are sourced from the OSRS Wiki.
 
 **Q: How do I reset just one shipwreck type?**
 A: Right-click on the shipwreck section header in the panel and select "Reset [Shipwreck] Data"
@@ -165,8 +171,3 @@ This project is licensed under the BSD 2-Clause License - see the [LICENSE](LICE
 - [RuneLite](https://runelite.net/) - The open source OSRS client
 - [OSRS Wiki](https://oldschool.runescape.wiki/) - Drop rate data source
 - The OSRS community for feedback and testing
-  - Item name
-  - Number of times dropped
-  - Current drop rate vs Expected drop rate
-
-All data persists between RuneLite sessions.

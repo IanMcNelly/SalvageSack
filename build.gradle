@@ -66,6 +66,6 @@ tasks.register('runClient', JavaExec) {
 	description = 'Run RuneLite with the plugin loaded'
 	classpath = sourceSets.test.runtimeClasspath
 	mainClass.set('com.salvagesack.SalvageSackPluginTest')
-	jvmArgs = ['-ea', '--illegal-access=permit']
+	jvmArgs = ['-ea']
 }
 

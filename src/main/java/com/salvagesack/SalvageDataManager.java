@@ -5,8 +5,11 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.config.ConfigManager;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
@@ -69,12 +72,15 @@ public class SalvageDataManager
 	 */
 	public Map<ShipwreckType, SalvageData> loadData()
 	{
-		// First try to load from RSProfile configuration
 		String jsonData = configManager.getRSProfileConfiguration(CONFIG_GROUP, DATA_KEY);
 
 		if (jsonData != null && !jsonData.isEmpty())
 		{
 			Map<ShipwreckType, SalvageData> dataMap = parseJsonData(jsonData);
+			if (dataMap == null)
+			{
+				return null;
+			}
 			if (!dataMap.isEmpty())
 			{
 				log.debug("Loaded salvage data from RSProfile configuration");
@@ -82,11 +88,13 @@ public class SalvageDataManager
 			}
 		}
 
-		// Check for legacy file-based data and migrate if found
 		Map<ShipwreckType, SalvageData> legacyData = loadLegacyData();
+		if (legacyData == null)
+		{
+			return null;
+		}
 		if (!legacyData.isEmpty())
 		{
-			// Double-check RSProfile wasn't updated by another instance during file load
 			String existingData = configManager.getRSProfileConfiguration(CONFIG_GROUP, DATA_KEY);
 			if (existingData != null && !existingData.isEmpty())
 			{
@@ -96,7 +104,6 @@ public class SalvageDataManager
 
 			log.info("Migrating legacy file data to RSProfile configuration");
 			saveData(legacyData);
-			// Rename the old file to indicate migration is complete
 			renameLegacyFile();
 			return legacyData;
 		}
@@ -136,6 +143,7 @@ public class SalvageDataManager
 		catch (Exception e)
 		{
 			log.error("Failed to parse salvage data JSON", e);
+			return null;
 		}
 
 		return dataMap;
@@ -153,7 +161,7 @@ public class SalvageDataManager
 			return dataMap;
 		}
 
-		try (FileReader reader = new FileReader(legacyDataFile))
+		try (InputStreamReader reader = new InputStreamReader(new FileInputStream(legacyDataFile), StandardCharsets.UTF_8))
 		{
 			SaveDataWrapper wrapper = gson.fromJson(reader, SaveDataWrapper.class);
 
@@ -176,9 +184,10 @@ public class SalvageDataManager
 
 			log.info("Loaded {} shipwreck types from legacy file: {}", dataMap.size(), legacyDataFile.getAbsolutePath());
 		}
-		catch (IOException e)
+		catch (Exception e)
 		{
 			log.error("Failed to load legacy salvage data file", e);
+			return null;
 		}
 
 		return dataMap;
@@ -221,17 +230,22 @@ public class SalvageDataManager
 	private static class SalvageDataDto
 	{
 		int totalLoots;
+		long lastUpdated;
 		Map<String, SalvageItemDto> items;
 
 		static SalvageDataDto fromSalvageData(SalvageData data)
 		{
 			SalvageDataDto dto = new SalvageDataDto();
 			dto.totalLoots = data.getTotalLoots();
+			dto.lastUpdated = data.getLastUpdated();
 			dto.items = new HashMap<>();
 			
-			for (Map.Entry<Integer, SalvageItem> entry : data.getItems().entrySet())
+			synchronized (data)
 			{
-				dto.items.put(String.valueOf(entry.getKey()), SalvageItemDto.fromSalvageItem(entry.getValue()));
+				for (Map.Entry<Integer, SalvageItem> entry : data.getItems().entrySet())
+				{
+					dto.items.put(String.valueOf(entry.getKey()), SalvageItemDto.fromSalvageItem(entry.getValue()));
+				}
 			}
 			
 			return dto;
@@ -258,7 +272,9 @@ public class SalvageDataManager
 				}
 			}
 			
-			return new SalvageData(type, totalLoots, itemsMap);
+			SalvageData salvageData = new SalvageData(type, totalLoots, itemsMap);
+			salvageData.setLastUpdated(lastUpdated);
+			return salvageData;
 		}
 	}
 

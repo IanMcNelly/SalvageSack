@@ -8,11 +8,11 @@ import lombok.Data;
 @Data
 public class SalvageItem
 {
-	private final int itemId;
+	private int itemId;
 	private final String itemName;
 	private int dropCount;      // Number of times this item was dropped (for rate calculation)
 	private int totalQuantity;  // Total quantity received (for display)
-	private final double expectedDropRate; // Expected rate from wiki (e.g., 0.1 for 10%)
+	private double expectedDropRate; // Expected rate from wiki (e.g., 0.1 for 10%)
 
 	public SalvageItem(int itemId, String itemName, double expectedDropRate)
 	{
